@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karakter Kutusu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fuzzy+Bubbles&display=swap" rel="stylesheet">
+    <style>
+        /* Stil Ayarları */
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            background-image: url('https://cdn.discordapp.com/attachments/1282358596817912009/1299799041600786482/Screenshot_2024_1026_211606.png?ex=671e83b0&is=671d3230&hm=8751ed3622d8047b89d77941211158628a14e3945984b1aa25d1de97b80d7535');
+            background-size: cover;
+            background-position: center;
+            margin: 0;
+            font-family: 'Fuzzy Bubbles', cursive;
+            color: white;
+        }
+        .box-container {
+            text-align: center;
+            margin-top: 20px;
+            position: relative;
+        }
+        .box {
+            font-size: 100px;
+            cursor: pointer;
+        }
+        .rarity-text {
+            margin-top: 10px;
+            font-size: 24px;
+        }
+        .timer {
+            font-size: 24px;
+            color: black;
+            position: absolute;
+            top: 0;
+            right: -50px;
+        }
+        .inventory {
+            margin-top: 30px;
+            width: 80%;
+            max-width: 600px;
+            background-color: white;
+            color: black;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .inventory h2 {
+            margin-top: 0;
+        }
+        .inventory-item {
+            font-size: 18px;
+            margin: 5px 0;
+        }
+        .extra-link {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        .extra-link:hover {
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Music -->
+    <audio id="backgroundMusic" src="https://cdn.discordapp.com/attachments/1282358596817912009/1299820829663690824/Bobi.mp3?ex=671e97fb&is=671d467b&hm=e45f03dd133a12c99e313199a7f53f35d1f8546b20abc84a24935e4407caca92&" autoplay loop></audio>
+    <audio id="boxOpenSound" src="https://cdn.discordapp.com/attachments/1282358596817912009/1299995196418949201/chikn-nuggit-box-opening-and-yay_vBMkPKQ.mp3?ex=671f3a5f&is=671de8df&hm=4cf6bca4e2707cea914d773b3b409da96c9e594bf716269c18166b1ad000e355&"></audio>
+
+    <div class="box-container">
+        <div class="box" onclick="attemptOpenBox()">📦</div>
+        <div id="rarityText" class="rarity-text"></div>
+        <div id="timer" class="timer"></div>
+    </div>
+    <div id="inventory" class="inventory">
+        <h2>Envanter</h2>
+        <div id="inventoryList"></div>
+    </div>
+
+    <!-- Extra Link -->
+    <a href="https://cdn.discordapp.com/attachments/1282358596817912009/1299819230560260217/Ekstra.pdf?ex=671e967e&is=671d44fe&hm=962536979c8b7a3285e8aabc9251962b63e7975d90027b66fda1ad1372c076a7&" 
+       download="Ekstra.pdf" 
+       class="extra-link">
+       Ekstralar için bana tıkla!
+    </a>
+
+    <script>
+        let countdown = 3;
+        let canOpenBox = false;
+        let timerInterval;
+        const inventoryCounts = {};
+
+        function startCountdown() {
+            document.getElementById('timer').textContent = countdown;
+            timerInterval = setInterval(() => {
+                countdown--;
+                document.getElementById('timer').textContent = countdown;
+                
+                if (countdown <= 0) {
+                    clearInterval(timerInterval);
+                    canOpenBox = true;
+                    document.getElementById('timer').textContent = "Açılabilir!";
+                }
+            }, 1000);
+        }
+
+        function attemptOpenBox() {
+            if (canOpenBox) {
+                document.getElementById('boxOpenSound').play(); // Kutu açılma sesini çal
+                revealCharacter();
+                countdown = 3;
+                canOpenBox = false;
+                startCountdown();
+            } else {
+                alert("Kutuyu açmak için bekleyin!");
+            }
+        }
+
+        function revealCharacter() {
+            const characters = {
+                "Sıradan": ["Mammi", "Johnny", "Helobo", "Dossy", "Hrarh"],
+                "Sıra Dışı": ["Airenpla", "Tros", "Herojon", "Gro", "Fanato"],
+                "Nadir": ["Fossil", "Kanbon", "Probo", "Hunda", "Hanudu"],
+                "Destansı": ["Jumpy", "Ancler", "Krampo", "Sta", "Jemsy"],
+                "Mistik": ["Ghossy", "Croco", "Zavio", "Nemos"],
+                "Efsanevi": ["Bobi", "Flozer", "Icy"]
+            };
+
+            const rarities = [
+                { name: "Sıradan", chance: 20, color: "gray", order: 1 },
+                { name: "Sıra Dışı", chance: 12.5, color: "blue", order: 2 },
+                { name: "Nadir", chance: 7.5, color: "green", order: 3 },
+                { name: "Destansı", chance: 2.5, color: "purple", order: 4 },
+                { name: "Mistik", chance: 0.5, color: "red", order: 5 },
+                { name: "Efsanevi", chance: 0.05, color: "yellow", order: 6 }
+            ];
+
+            let randomValue = Math.random() * 100;
+            let accumulatedChance = 0;
+            let selectedRarity;
+
+            for (let rarity of rarities) {
+                accumulatedChance += rarity.chance;
+                if (randomValue <= accumulatedChance) {
+                    selectedRarity = rarity;
+                    break;
+                }
+            }
+
+            if (!selectedRarity) {
+                document.getElementById("rarityText").textContent = "Hiçbir şey çıkmadı!";
+                document.getElementById("rarityText").style.color = "black";
+            } else {
+                const charactersOfRarity = characters[selectedRarity.name];
+                const selectedCharacter = charactersOfRarity[Math.floor(Math.random() * charactersOfRarity.length)];
+                document.getElementById("rarityText").textContent = `${selectedRarity.name} karakter çıktı: ${selectedCharacter}!`;
+                document.getElementById("rarityText").style.color = selectedRarity.color;
+                
+                addToInventory(selectedCharacter, selectedRarity);
+            }
+        }
+
+        function addToInventory(character, rarity) {
+            const inventoryList = document.getElementById("inventoryList");
+
+            // Eğer karakter zaten varsa sayısını artır
+            if (inventoryCounts[character]) {
+                inventoryCounts[character].count++;
+                inventoryCounts[character].element.textContent = `${character} ${inventoryCounts[character].count}x`;
+            } else {
+                // Yeni karakter ekle
+                const inventoryItem = document.createElement("div");
+                inventoryItem.textContent = `${character} 1x`;
+                inventoryItem.classList.add("inventory-item");
+                inventoryItem.style.color = rarity.color;
+                inventoryItem.dataset.order = rarity.order;
+
+                inventoryList.appendChild(inventoryItem);
+
+                // Yeni karakteri kaydet
+                inventoryCounts[character] = {
+                    count: 1,
+                    element: inventoryItem
+                };
+            }
+
+            // Envanteri nadirliğe göre sırala
+            Array.from(inventoryList.children)
+                .sort((a, b) => a.dataset.order - b.dataset.order)
+                .forEach(item => inventoryList.appendChild(item));
+        }
+
+        // İlk geri sayımı başlat
+        startCountdown();
+    </script>
+</body>
+</html>
